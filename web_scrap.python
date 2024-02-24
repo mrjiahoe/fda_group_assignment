@@ -1,0 +1,21 @@
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+
+url = requests.get("https://www.worldometers.info/world-population/population-by-country/")
+soup = BeautifulSoup(url.content, "html.parser")
+
+data = []                                       # Initializes an empty list to store the extracted data.
+table = soup.find('table')                      # Finds the first table element in the parsed HTML content and stores it in the 'table' variable.
+
+rows = table.find_all('tr')                     # Finds all the table row elements (<tr>) within the table and stores them in the rows variable.
+for row in rows:                               
+    cols = row.find_all(['td', 'th'])           # extracts the text from the table cells (<td>) and table header cells (<th>)
+    cols = [ele.text.strip() for ele in cols]   # Strips any leading or trailing whitespace from the text
+    data.append([ele for ele in cols if ele])   # Appends the cleaned data to the data list.
+
+df = pd.DataFrame(data)
+new_header = df.iloc[0]                         # Assigns the first row of the DataFrame as the column headers.
+df = df[1:]                                     # Removes the first row (since it contains the column headers) from the DataFrame.
+df.columns = new_header                         # Sets the column headers of the DataFrame.
+df.to_csv('pops_scrap.csv', index=False)        # Writes the DataFrame to a CSV file named 'pops_scrap.csv' without including the row indices.
